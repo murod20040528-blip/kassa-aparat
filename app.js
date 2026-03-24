@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.style.transform = 'scale(1.2) translateY(-4px)';
                 setTimeout(() => icon.style.transform = '', 150);
 
-                if(p.price === null) {
+                if(p.price == null) {
                     window.currentOpenPriceProduct = p;
                     document.getElementById('price-prompt-title').textContent = p.name;
                     document.getElementById('price-prompt-input').value = '';
