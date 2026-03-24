@@ -1,0 +1,15 @@
+{
+  "name": "pos-system",
+  "version": "1.0.0",
+  "description": "Dynamic POS System for Web",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "keywords": [
+    "pos",
+    "point of sale"
+  ],
+  "author": "",
+  "license": "ISC"
+}

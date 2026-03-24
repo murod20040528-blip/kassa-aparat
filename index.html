@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f2f2f7" id="meta-theme-color">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <title>POS System</title>
+    <!-- Preload fonts to avoid layout shift -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=13">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+</head>
+<body class="light-mode">
+    <div id="app">
+        <main id="main-content">
+            <!-- 1. Home (Asosiy) Tab -->
+            <section id="tab-home" class="tab-content active">
+                <header class="app-header glass-header" style="flex-shrink: 0; z-index: 10;">
+                    <div class="header-top" style="margin-bottom: 0;">
+                        <div class="greeting">
+                            <span class="date-subtitle" id="current-date">Kassa</span>
+                            <h1>Asosiy</h1>
+                        </div>
+                    </div>
+                </header>
+                
+                <div class="home-top-pane">
+                    <div class="quick-products-grid" id="products-grid">
+                        <!-- Products injected via JS -->
+                    </div>
+                </div>
+                
+                <div class="home-bottom-pane">
+                    <div class="section-header-compact">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <h3>Buyurtma</h3>
+                            <span class="compact-total" id="inline-total">0 UZS</span>
+                        </div>
+                        <div class="compact-actions hidden" id="inline-actions">
+                            <button class="icon-btn-text text-danger" id="btn-reset-order">Tozalash</button>
+                            <button class="icon-btn-text text-primary" id="btn-save-order">Saqlash</button>
+                        </div>
+                    </div>
+
+                    <div class="inline-orders-scroll">
+                        <div class="inline-order-list" id="inline-orders-container">
+                            <div class="empty-state">Hozircha bo'sh...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Orders History (Buyurtmalar) Tab -->
+            <section id="tab-orders" class="tab-content">
+                <header class="app-header glass-header">
+                    <h1>Buyurtmalar</h1>
+                </header>
+                <div class="list-container" id="history-container">
+                    <!-- History injected here -->
+                </div>
+            </section>
+
+            <!-- 3. Analytics (Hisobot) Tab -->
+            <section id="tab-analytics" class="tab-content">
+                <header class="app-header glass-header" style="padding-bottom: 16px;">
+                    <h1>Hisobot</h1>
+                    <div class="segmented-control">
+                        <div class="segment-indicator"></div>
+                        <button class="segment-btn active" data-filter="today">Bugun</button>
+                        <button class="segment-btn" data-filter="week">Hafta</button>
+                        <button class="segment-btn" data-filter="month">Oy</button>
+                    </div>
+                </header>
+                <div class="analytics-content">
+                    <div class="stats-row">
+                        <div class="stat-card primary-stat">
+                            <div class="stat-icon"><ion-icon name="wallet"></ion-icon></div>
+                            <div class="stat-info">
+                                <span class="stat-label">Tushum (Aylanma)</span>
+                                <h2 class="stat-value" id="stat-revenue">0 UZS</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-row two-col">
+                        <div class="stat-card" style="padding: 16px;">
+                            <span class="stat-label">Sof foyda</span>
+                            <h3 class="stat-value small" id="stat-profit" style="font-size: 20px; color: var(--accent-green);">0 UZS</h3>
+                        </div>
+                        <div class="stat-card" style="padding: 16px;">
+                            <span class="stat-label">Xarajatlar</span>
+                            <h3 class="stat-value small" id="stat-expense" style="font-size: 20px; color: var(--accent-red);">0 UZS</h3>
+                        </div>
+                    </div>
+                    <div class="stats-row two-col">
+                        <div class="stat-card">
+                            <span class="stat-label">Buyurtmalar</span>
+                            <h3 class="stat-value small" id="stat-count">0</h3>
+                            <div class="trend positive"><ion-icon name="receipt-outline"></ion-icon></div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">O'rtacha chek</span>
+                            <h3 class="stat-value small" id="stat-avg">0 UZS</h3>
+                            <div class="trend positive"><ion-icon name="cash-outline"></ion-icon></div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container stat-card" style="margin-bottom: 16px;">
+                        <h3 class="chart-title" style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Daromad dinamikasi</h3>
+                        <div style="position: relative; height: 180px; width: 100%;">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-container stat-card" style="margin-bottom: 16px;">
+                        <h3 class="chart-title" style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Sotuvlar ulushi</h3>
+                        <div style="position: relative; height: 200px; width: 100%; display: flex; justify-content: center;">
+                            <canvas id="productsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title">Eng ko'p sotilgan</h3>
+                    <div class="top-products-list" id="top-products" style="margin-bottom: 24px;">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Settings (Sozlama) Tab -->
+            <section id="tab-settings" class="tab-content">
+                <header class="app-header glass-header">
+                    <h1>Sozlama</h1>
+                </header>
+                
+                <div class="settings-group">
+                    <div class="setting-item" id="set-products">
+                        <div class="setting-icon bg-orange"><ion-icon name="fast-food"></ion-icon></div>
+                        <div class="setting-content">
+                            <span class="setting-title">Mahsulotlar</span>
+                            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="set-users">
+                        <div class="setting-icon bg-blue"><ion-icon name="people"></ion-icon></div>
+                        <div class="setting-content">
+                            <span class="setting-title">Foydalanuvchilar</span>
+                            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="set-expenses">
+                        <div class="setting-icon bg-red"><ion-icon name="trending-down"></ion-icon></div>
+                        <div class="setting-content border-none">
+                            <span class="setting-title">Chiqimlar (Xarajatlar)</span>
+                            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                     <div class="setting-item" id="set-printer">
+                        <div class="setting-icon bg-gray"><ion-icon name="print"></ion-icon></div>
+                        <div class="setting-content border-none">
+                            <span class="setting-title">Printer Sozlamalari</span>
+                            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="setting-item" id="set-themes">
+                        <div class="setting-icon" style="background: linear-gradient(135deg, #0f172a, #f2f2f7); color: white; display:flex; justify-content:center; align-items:center;"><ion-icon name="color-palette"></ion-icon></div>
+                        <div class="setting-content border-none">
+                            <span class="setting-title" id="current-theme-label">Mavzular</span>
+                            <ion-icon name="chevron-forward" class="chevron"></ion-icon>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="setting-item" id="set-logout">
+                        <div class="setting-icon bg-red"><ion-icon name="log-out"></ion-icon></div>
+                        <div class="setting-content border-none">
+                            <span class="setting-title text-danger">Tizimdan chiqish</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Variable Price Prompt Overlay -->
+    <div class="modal-backdrop" id="price-prompt-backdrop"></div>
+    <div id="price-prompt-modal" style="position:fixed; top:50%; left:50%; width: 320px; transform:translate(-50%, -50%) scale(0.9); z-index:105; background:var(--surface-color); color:var(--text-primary); border-radius:16px; padding: 24px; opacity:0; visibility:hidden; transition:all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2); box-shadow:0 10px 40px rgba(0,0,0,0.2);">
+        <h3 style="margin-bottom: 16px; font-weight: 600; text-align: center; font-size: 18px;" id="price-prompt-title">Summani kiriting</h3>
+        <input type="number" id="price-prompt-input" placeholder="Summa (UZS)" style="width: 100%; font-size: 28px; font-weight: 600; padding: 12px; border: 1.5px solid var(--border-light); border-radius: 12px; text-align: center; margin-bottom: 24px; outline: none; background:var(--bg-color); color:var(--text-primary);">
+        <div style="display:flex; gap: 12px;">
+            <button class="btn btn-secondary" id="btn-price-cancel" style="flex:1; height: 46px;">Bekor</button>
+            <button class="btn btn-primary" id="btn-price-submit" style="flex:1; height: 46px;">Qo'shish</button>
+        </div>
+    </div>
+
+    <!-- History Detail Modal -->
+    <div class="modal-backdrop" id="components-backdrop"></div>
+        <div class="bottom-sheet" id="history-modal">
+            <div class="sheet-header">
+                <div class="sheet-drag-handle"></div>
+                <h2>Buyurtma Tafsiloti</h2>
+                <button class="btn-close-sheet" id="btn-close-history"><ion-icon name="close-circle"></ion-icon></button>
+            </div>
+            <div class="sheet-content" id="history-detail-content">
+            </div>
+        </div>
+
+        <!-- Settings Detail Modal -->
+        <div class="bottom-sheet" id="settings-modal" style="height: 90vh;">
+            <div class="sheet-header">
+                <div class="sheet-drag-handle"></div>
+                <h2 id="settings-modal-title">Sozlama</h2>
+                <button class="btn-close-sheet" id="btn-close-settings"><ion-icon name="close-circle"></ion-icon></button>
+            </div>
+            <div class="sheet-content" id="settings-detail-content" style="padding: 0; background-color: var(--bg-color);"></div>
+        </div>
+
+        <!-- Auth Overlay -->
+        <div id="auth-overlay" class="auth-overlay show">
+            <div class="auth-box">
+                <div class="auth-icon-wrap"><ion-icon name="lock-closed"></ion-icon></div>
+                <h2>Tizimga kirish</h2>
+                <p>Kassir yoki Admin</p>
+                <div class="pin-display" id="pin-display">
+                    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+                </div>
+                <div class="pin-pad" id="pin-pad">
+                    <button class="pin-btn" data-val="1">1</button>
+                    <button class="pin-btn" data-val="2">2</button>
+                    <button class="pin-btn" data-val="3">3</button>
+                    <button class="pin-btn" data-val="4">4</button>
+                    <button class="pin-btn" data-val="5">5</button>
+                    <button class="pin-btn" data-val="6">6</button>
+                    <button class="pin-btn" data-val="7">7</button>
+                    <button class="pin-btn" data-val="8">8</button>
+                    <button class="pin-btn" data-val="9">9</button>
+                    <button class="pin-btn act-btn text-danger" id="pin-del"><ion-icon name="backspace"></ion-icon></button>
+                    <button class="pin-btn" data-val="0">0</button>
+                    <button class="pin-btn act-btn" id="pin-submit" style="color:var(--accent-green)"><ion-icon name="arrow-forward"></ion-icon></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="tab-home">
+                <ion-icon name="home"></ion-icon>
+                <span>Asosiy</span>
+            </button>
+            <button class="nav-item" data-target="tab-orders">
+                <ion-icon name="receipt-outline"></ion-icon>
+                <span>Buyurtmalar</span>
+            </button>
+            <button class="nav-item" data-target="tab-analytics">
+                <ion-icon name="stats-chart-outline"></ion-icon>
+                <span>Hisobot</span>
+            </button>
+            <button class="nav-item" data-target="tab-settings">
+                <ion-icon name="settings-outline"></ion-icon>
+                <span>Sozlama</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="toast" class="toast">
+        <ion-icon name="checkmark-circle" id="toast-icon"></ion-icon>
+        <span id="toast-text">Tizim xabari</span>
+    </div>
+
+    <script src="app.js?v=13"></script></script>
+</body>
+</html>
