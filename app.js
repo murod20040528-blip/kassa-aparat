@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Firebase Init ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA5nK3OTekNKeonjNWIVeOk9jUxK2YLhc8",
+      authDomain: "kassa-aparat-76ed5.firebaseapp.com",
+      projectId: "kassa-aparat-76ed5",
+      storageBucket: "kassa-aparat-76ed5.firebasestorage.app",
+      messagingSenderId: "497385672835",
+      appId: "1:497385672835:web:809dbae5374cf516e38bb6",
+      measurementId: "G-JRETPDXJCE",
+      databaseURL: "https://kassa-aparat-76ed5-default-rtdb.firebaseio.com/"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     // --- State ---
     let orderItems = []; 
     
@@ -6,7 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const val = localStorage.getItem(key);
         return val ? JSON.parse(val) : def;
     };
-    const setStorage = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+    
+    const setStorage = (key, val) => {
+        localStorage.setItem(key, JSON.stringify(val));
+        if (db) {
+            db.ref(key).set(val); // Sync to firebase
+        }
+    };
 
     let productsList = getStorage('pos_prod', [
         { id: '1', name: "Jo'ja (1 kg / portsiya)", price: null, icon: "🍗" },
@@ -956,6 +977,68 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('set-themes').click(); 
         }
     };
+
+    // --- Firebase Real-time Sync Listeners ---
+    const syncNode = (key, fallbackArray, updateCallback) => {
+        db.ref(key).on('value', snapshot => {
+            const data = snapshot.val();
+            if (data) {
+                updateCallback(data);
+            } else {
+                // Seed Firebase if empty
+                db.ref(key).set(fallbackArray);
+            }
+        });
+    };
+
+    // 1. Products Sync
+    syncNode('pos_prod', [
+        { id: '1', name: "Jo'ja (1 kg / portsiya)", price: null, icon: "🍗" },
+        { id: '2', name: "Fastfood", price: 30000, icon: "🍔" },
+        { id: '3', name: "Ichimlik", price: 10000, icon: "🥤" },
+        { id: '4', name: "Mayda-chuyda", price: 5000, icon: "🍟" }
+    ], (data) => {
+        productsList = data;
+        if (typeof renderHomeGrid === 'function') renderHomeGrid();
+        const setModal = document.getElementById('settings-modal');
+        if (setModal && setModal.classList.contains('show') && document.getElementById('settings-modal-title')?.textContent === 'Mahsulotlar') {
+            if (typeof renderProductsSettings === 'function') renderProductsSettings();
+        }
+    });
+
+    // 2. Users Sync
+    syncNode('pos_usr', [
+        { id: 'u1', name: "Admin", role: "admin", pin: "05284" },
+        { id: 'u2', name: "Kassir", role: "cashier", pin: "1234" }
+    ], (data) => {
+        usersList = data;
+        const defaultAdm = usersList.find(u => u.role === "admin" && u.pin === "1111");
+        if(defaultAdm) {
+            defaultAdm.pin = "05284";
+            setStorage('pos_usr', usersList);
+        }
+        const setModal = document.getElementById('settings-modal');
+        if (setModal && setModal.classList.contains('show') && document.getElementById('settings-modal-title')?.textContent === 'Foydalanuvchilar') {
+            if (typeof renderUsersSettings === 'function') renderUsersSettings();
+        }
+    });
+
+    // 3. Expenses Sync
+    syncNode('pos_exp', [], (data) => {
+        expensesList = data;
+        if (typeof updateAnalytics === 'function') updateAnalytics();
+        const setModal = document.getElementById('settings-modal');
+        if (setModal && setModal.classList.contains('show') && document.getElementById('settings-modal-title')?.textContent === 'Chiqimlar / Xarajatlar') {
+            if (typeof renderExpensesSettings === 'function') renderExpensesSettings();
+        }
+    });
+
+    // 4. Orders Sync
+    syncNode('pos_ord', [], (data) => {
+        pastOrders = data;
+        if (typeof renderHistory === 'function') renderHistory();
+        if (typeof updateAnalytics === 'function') updateAnalytics();
+    });
 
     renderHistory();
     updateUI();
