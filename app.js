@@ -983,7 +983,9 @@ document.addEventListener('DOMContentLoaded', () => {
         db.ref(key).on('value', snapshot => {
             const data = snapshot.val();
             if (data) {
-                updateCallback(data);
+                // Firebase ba'zida massivni Object qilib qaytaradi, uni massivga aylantiramiz
+                const arrayData = Array.isArray(data) ? data : Object.values(data);
+                updateCallback(arrayData);
             } else {
                 // Seed Firebase if empty
                 db.ref(key).set(fallbackArray);
