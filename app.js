@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Formatters ---
-    const formatMoney = (sum) => sum.toLocaleString('uz-UZ') + ' UZS';
+    const formatMoney = (sum) => (sum != null ? sum : 0).toLocaleString('uz-UZ') + ' UZS';
 
     // --- DOM Elements ---
     const orderContainer = document.getElementById('inline-orders-container');
@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="btn-icon">${p.icon}</span>
                 <div class="btn-meta">
                     <span class="btn-name">${p.name}</span>
-                    <span class="btn-price">${p.price !== null ? formatMoney(p.price) : 'Maxsus summa'}</span>
+                    <span class="btn-price">${p.price != null ? formatMoney(p.price) : 'Maxsus summa'}</span>
                 </div>
             `;
             btn.addEventListener('click', () => {
@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="row-icon">${p.icon}</div>
                     <div class="row-content">
                         <div class="row-title">${p.name}</div>
-                        <div class="row-sub">${p.price !== null ? formatMoney(p.price) : 'Maxsus narx / Tarozida'}</div>
+                        <div class="row-sub">${p.price != null ? formatMoney(p.price) : 'Maxsus narx / Tarozida'}</div>
                     </div>
                     <button class="icon-btn-text text-danger" onclick="window.delProduct('${p.id}')">O'chirish</button>
                 </div>
